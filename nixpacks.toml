@@ -1,12 +1,25 @@
 # nixpacks.toml
 
+# 1. Instala apenas PHP 8.3 e Nginx (Sem Node.js)
 [phases.setup]
-nixPkgs = ["php84", "php84Packages.composer", "nginx"]
+nixPkgs = ["php83", "php83Packages.composer", "nginx", "libpq"]
 
-[phases.build]
+# 2. Instalação: Roda APENAS o Composer (Ignora o NPM)
+[phases.install]
+dependsOn = ["setup"]
 cmds = [
     "composer install --no-dev --optimize-autoloader --no-interaction --no-progress"
 ]
 
+# 3. Build: Otimizações do Laravel
+[phases.build]
+dependsOn = ["install"]
+cmds = [
+    "php artisan config:cache",
+    "php artisan route:cache",
+    "php artisan view:cache"
+]
+
+# 4. Start: Liga o servidor
 [start]
 cmd = "php artisan migrate --force && php artisan storage:link && php artisan serve --host=0.0.0.0 --port=$PORT"
