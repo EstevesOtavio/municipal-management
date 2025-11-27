@@ -14,7 +14,7 @@
                     </h1>
                 </div>
 
-                <div class="flex flex-col xl:flex-row justify-between items-end gap-4">
+                <div class="flex flex-col xl:flex-row justify-between items-end gap-4 py-2">
                     
                     <div class="inline-flex flex-wrap items-center bg-white border border-gray-200 rounded-lg shadow-sm p-1">
                         
