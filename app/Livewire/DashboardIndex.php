@@ -14,6 +14,8 @@ class DashboardIndex extends Component
     use WithPagination;
 
     public Secretariat $secretariat;
+    public $showSecretariatModal = false;
+    public $newSecretariatName = '';
     public $activeFilters = [];
     public $selectedCategories = [];
     // --- NOVO: Variáveis do Modal (Estado) ---
@@ -21,7 +23,7 @@ class DashboardIndex extends Component
     // Campos do Formulário (Data Binding)
     public $title = '';
     public $location = '';
-    public $category = 'Limpeza'; // Valor padrão
+    public $category = ''; // Valor padrão
     public $is_urgent = false;
     public $due_date = '';
     public $editingId = null; // Guarda o ID se estivermos editando
@@ -33,6 +35,32 @@ class DashboardIndex extends Component
     public function mount(Secretariat $secretariat)
     {
         $this->secretariat = $secretariat;
+    }
+
+    public function createSecretariat()
+    {
+        $this->validate(['newSecretariatName' => 'required|min:3|unique:secretariats,name']);
+
+        // Cria gerando o slug (Ex: "Meio Ambiente" -> "meio-ambiente")
+        \App\Models\Secretariat::create([
+            'name' => $this->newSecretariatName,
+            'slug' => Str::slug($this->newSecretariatName)
+        ]);
+
+        $this->newSecretariatName = ''; // Limpa input
+        // O Livewire atualiza a lista $allSecretariats automaticamente no render
+        session()->flash('success', 'Secretaria criada!');
+    }
+
+    public function deleteSecretariat($id)
+    {
+        // Trava de Segurança: Não pode deletar a secretaria que está aberta na tela
+        if ($id === $this->secretariat->id) {
+            $this->addError('sec_error', 'Você não pode excluir a secretaria atual enquanto navega nela.');
+            return;
+        }
+
+        \App\Models\Secretariat::destroy($id);
     }
 
     public function manageCategories()
@@ -89,19 +117,24 @@ class DashboardIndex extends Component
     // --- NOVO: Salvar no Banco ---
     public function save()
     {
+        if ($this->category === ""){
+            $this->category = null;
+        }
+
         $this->validate([
             'title' => 'required|min:3',
             'location' => 'required',
             'due_date' => 'nullable|date',
+            'category' => 'nullable|integer',
         ]);
 
         $data = [
             'secretariat_id' => $this->secretariat->id,
             'title' => $this->title,
             'location_text' => $this->location,
-            'category_id' => $this->category ?: null,
+            'category_id' => $this->category,
             'is_urgent' => $this->is_urgent,
-            'due_date' => $this->due_date ?: null,
+            'due_date' => empty($this->due_date) ? null : $this->due_date,
             'status' => $this->status, // Salva o status novo
         ];
 
