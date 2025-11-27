@@ -13,12 +13,10 @@ cmds = [
 [phases.build]
 dependsOn = ["install"]
 cmds = [
-    "npm run build", # Compila o CSS/JS do Vite
-    "php artisan config:cache",
-    "php artisan route:cache",
-    "php artisan view:cache"
+    "npm run build", 
+    # REMOVI OS COMPANDOS DE CACHE DAQUI
 ]
 
 [start]
-# Usa o script padrão do Heroku/Railway para rodar Nginx+PHP corretamente
-cmd = "php artisan migrate --force && php artisan storage:link && echo 'Starting Nginx...' && /assets/scripts/start-nginx-php-fpm"
+# Adicionei 'php artisan optimize' para cachear config+rotas na inicialização
+cmd = "php artisan migrate --force && php artisan optimize && /assets/scripts/start-nginx-php-fpm"
