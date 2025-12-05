@@ -145,7 +145,8 @@ class DashboardIndex extends Component
         } else {
             // MODO CRIAÇÃO: Cria um novo
             $data['user_id'] = auth()->id();
-            $data['code'] = 'ODS-' . strtoupper(Str::random(4));
+            $nextId = ServiceOrder::withTrashed()->max('id') + 1;
+            $data['code'] = 'ODS-' . str_pad($nextId, 3, '0', STR_PAD_LEFT);
             ServiceOrder::create($data);
         }
 
