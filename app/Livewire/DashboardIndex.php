@@ -13,7 +13,9 @@ class DashboardIndex extends Component
 {
     use WithPagination;
 
-    public Secretariat $secretariat;
+    public $editingCode = '';
+
+    public ?Secretariat $secretariat = null;
     public $showSecretariatModal = false;
     public $newSecretariatName = '';
     public $activeFilters = [];
@@ -32,9 +34,28 @@ class DashboardIndex extends Component
     public $newCategoryName = '';
     public $search = '';
 
-    public function mount(Secretariat $secretariat)
+    public function mount($slug = null)
     {
-        $this->secretariat = $secretariat;
+        // Se o Livewire já resolveu o model (binding de rota), ele vem como objeto.
+        // Se a rota for opcional e vier vazia, $secretariat será null.
+        // Se vier uma string (slug) que não bateu, precisamos tratar.
+
+        if ($slug) {
+            $this->secretariat = Secretariat::where('slug', $slug)->first();
+        }
+
+        // 2. Se não achou (ou não veio nada), tenta a primeira do banco
+        if (! $this->secretariat) {
+            $firstSec = Secretariat::first();
+
+            if ($firstSec) {
+                // Redireciona para a primeira (usando o parâmetro 'slug')
+                return redirect()->route('dashboard', ['slug' => $firstSec->slug]);
+            } else {
+                // Se não tem NADA no banco, abre o modal
+                $this->showSecretariatModal = true;
+            }
+        }
     }
 
     public function createSecretariat()
@@ -103,6 +124,7 @@ class DashboardIndex extends Component
 
         // Preenche o formulário com os dados do banco
         $this->editingId = $id;
+        $this->editingCode = $order->code;
         $this->title = $order->title;
         $this->location = $order->location_text;
         $this->category = $order->category_id;
@@ -166,7 +188,7 @@ class DashboardIndex extends Component
 
         // Fecha o modal e limpa tudo
         $this->showModal = false;
-        $this->reset(['editingId', 'title', 'location', 'category', 'is_urgent', 'due_date', 'status']);
+        $this->reset(['editingId', 'title', 'location', 'category', 'is_urgent', 'due_date', 'status', 'editingCode']);
         session()->flash('success', 'Ordem de serviço removida.');
     }
 
@@ -197,6 +219,15 @@ class DashboardIndex extends Component
 
     public function render()
     {
+        if (! $this->secretariat) {
+            return view('livewire.dashboard-index', [
+                'orders' => collect([]), // Coleção vazia para não quebrar o @foreach
+                'allSecretariats' => [],
+                'categories' => [],
+                'stats' => ['total' => 0, 'urgent' => 0, 'overdue' => 0, 'done' => 0],
+            ])->layout('layouts.app');
+        }
+
         $query = $this->secretariat->serviceOrders()->orderBy('due_date', 'asc');
 
         $query->when($this->search, function($q) {
@@ -238,7 +269,7 @@ class DashboardIndex extends Component
             'orders' => $query->paginate(12),
             'allSecretariats' => \App\Models\Secretariat::all(),
             'categories' => $this->secretariat->categories,
-            'stats' => $stats,
+            'stats' => $stats ?? [],
         ])->layout('layouts.app');
     }
 }

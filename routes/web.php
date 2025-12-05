@@ -4,11 +4,11 @@ use App\Livewire\DashboardIndex;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return redirect()->route('dashboard', ['secretariat' => 'urbanismo']);
+    return redirect()->route('dashboard');
 });
 
 // Rota dinâmica: carrega o painel da secretaria informada na URL
-Route::get('/painel/{secretariat:slug}', DashboardIndex::class)
+Route::get('/dashboard/{slug?}', \App\Livewire\DashboardIndex::class)
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 

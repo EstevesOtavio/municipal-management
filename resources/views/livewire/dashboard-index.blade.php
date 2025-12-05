@@ -388,7 +388,9 @@
                         <div class="bg-white rounded-3xl p-8 w-full max-w-lg shadow-2xl relative animate-fadeIn">
                             
                             <div class="flex justify-between items-center mb-6">
-                                <h2 class="text-2xl font-extrabold text-gray-900">{{ $editingId ? 'Editar ODS' : 'Nova Solicitação' }}</h2>
+                                <h2 class="text-2xl font-extrabold text-gray-900">
+                                    {{ $editingId ? 'Editar ' . $editingCode : 'Nova Solicitação' }}
+                                </h2>
                                 <button wire:click="$set('showModal', false)" class="p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition">
                                     <x-heroicon-o-x-mark class="w-5 h-5 text-gray-500" />
                                 </button>
